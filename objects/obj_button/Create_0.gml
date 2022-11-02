@@ -1,0 +1,2 @@
+name = "string"
+func = undefined

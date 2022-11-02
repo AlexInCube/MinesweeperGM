@@ -1,0 +1,2 @@
+name = "Статистика"
+func = StatisticsShow
