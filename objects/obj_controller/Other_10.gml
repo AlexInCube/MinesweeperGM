@@ -121,11 +121,11 @@ function remove_cell(_x, _y){
 					WriteStat(undefined, STAT_WINS, ReadStat(undefined, STAT_WINS) + 1)
 					
 					var init_time = ReadStat(undefined, STAT_BEST_TIME)
-					var final_time = 0
+
 					if (init_time == 0) { 
-						final_time = obj_smile.seconds 
+						WriteStat(undefined, STAT_BEST_TIME, round(obj_smile.seconds))
 					} else if (init_time > obj_smile.seconds){
-						WriteStat(undefined, STAT_BEST_TIME, obj_smile.seconds )
+						WriteStat(undefined, STAT_BEST_TIME, round(obj_smile.seconds))
 					}
 				}
             }

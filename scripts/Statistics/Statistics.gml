@@ -12,9 +12,12 @@ global.difficulties = [
 global.current_difficulty = global.difficulties[0]
 
 function ReadStat(difficulty = global.current_difficulty, stat_name){
+	var value = 0
 	ini_open(STAT_FILE)
-	return ini_read_real(difficulty.internal_name, stat_name, 0)
+	value = ini_read_real(difficulty.internal_name, stat_name, 0)
 	ini_close()
+	
+	return value
 }
 
 function WriteStat(difficulty = global.current_difficulty, stat_name, data){
