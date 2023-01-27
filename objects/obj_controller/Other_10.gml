@@ -1,8 +1,20 @@
 function fill_grid_with_cells(){
-	for (var xx = 0; xx < grid_width; xx++){
-	    for (var yy = 0; yy < grid_height; yy++){
-			game_grid[# xx,yy] = new Cell()
+	var xx = GAME_ZONE_X
+	var yy = GAME_ZONE_Y
+	
+	for (var r = 0; r < grid_width; r++){
+	    for (var c = 0; c < grid_height; c++){
+			var cell = new Cell()
+			game_grid[# r, c] = cell
+			
+			cell.set_position(xx, yy)		
+			cell.set_grid_position(r, c)
+			yy += CELL_SIZE
+
 		}
+		
+		xx += CELL_SIZE
+		yy = GAME_ZONE_Y
 	}
 }
 
@@ -31,6 +43,18 @@ function check_cell_is_mine(_x, _y){
 	}
 	
 	return game_grid[# _x,_y].is_mine()
+}
+
+function check_cell_is_flag(_x, _y){
+	if (_x < 0 or _x > grid_width - 1){
+		return false
+	}
+	
+	if (_y < 0 or _y > grid_height - 1){
+		return false
+	}
+	
+	return game_grid[# _x,_y].is_flag()
 }
 
 function update_cell_values(){
@@ -69,10 +93,10 @@ function update_cell_values(){
 function move_mine(_x, _y){
 	var init_cell = game_grid[# _x, _y]
 	
-	if (!init_cell.is_mine()) { show_debug_message("cell is empty"); exit}
+	if (!init_cell.is_mine()) exit
 	
 	while (true){
-		show_debug_message("cell is mine")
+		//show_debug_message("cell is mine")
 		var new_x = irandom(grid_width - 1)
 		var new_y = irandom(grid_height - 1)
 		var cell = game_grid[# new_x, new_y]
@@ -88,57 +112,27 @@ function move_mine(_x, _y){
 }
 
 function remove_cell(_x, _y){
-	if (mouse_check_button_pressed(mb_left)){
-		if (first_turn){
-			move_mine(_x, _y)
-			first_turn = false
-		}
+	if (first_turn){
+		move_mine(_x, _y)
+		first_turn = false
+	}
 		
-		var cell = game_grid[# _x, _y]
-        // Disable Flag Clicks
-        if (cell.is_closed() and !cell.is_flag()){
-            // Detonate cells with mine
-            if (cell.is_mine()){
-				game_in_progress = false
-				obj_smile.image_index = 1
-				WriteStat(undefined, STAT_GAMES, ReadStat(undefined, STAT_GAMES) + 1)
-                // Display Bombs
-                for (var xx = 0; xx < grid_width; xx++){
-					for (var yy = 0; yy < grid_height; yy++){
-                        if (game_grid[# xx,yy].is_mine()){
-                            game_grid[# xx,yy].open()
-                        }
-                    }
-                }
-            } else {
-                clear_cells(_x, _y);
-
-				if (cells_remaining == total_mines){
-				    obj_smile.image_index = 2
-					game_in_progress = false
-										
-					WriteStat(undefined, STAT_GAMES, ReadStat(undefined, STAT_GAMES) + 1)
-					WriteStat(undefined, STAT_WINS, ReadStat(undefined, STAT_WINS) + 1)
-					
-					var init_time = ReadStat(undefined, STAT_BEST_TIME)
-
-					if (init_time == 0) { 
-						WriteStat(undefined, STAT_BEST_TIME, round(obj_smile.seconds))
-					} else if (init_time > obj_smile.seconds){
-						WriteStat(undefined, STAT_BEST_TIME, round(obj_smile.seconds))
-					}
-				}
-            }
+	var cell = game_grid[# _x, _y]
+    // Disable Flag Clicks
+    if (cell.is_closed() and !cell.is_flag()){
+        // Detonate cells with mine
+        if (cell.is_mine()){
+			lose_game()
+        } else {
+            clear_cells(_x, _y);
+			win_game()
         }
     }
 }
 
 function set_flag(cell){
-	if (mouse_check_button_pressed(mb_right)){
-	    cell.switch_flag()
-		if (cell.is_flag()) num_flags++ else num_flags--
-		
-	}
+	cell.switch_flag()
+	if (cell.is_flag()) num_flags++ else num_flags--
 }
 
 function draw_cells_data(){
@@ -148,57 +142,92 @@ function draw_cells_data(){
 
 	for (var r = 0; r < grid_width; r++) {
 		for (var c = 0; c < grid_height; c++) {
-			var xx = (x + CELL_SIZE * r) + GAME_ZONE_X
-			var yy = (y + CELL_SIZE * c) + GAME_ZONE_Y
-			var cell = game_grid[# r, c]
-			
-			if (cell.is_closed()) {
-				draw_sprite(spr_cell, cell.hover, xx, yy)
-				
-				if (cell.is_flag()){
-					draw_sprite(spr_flag, 0, xx, yy)
-				}
-				continue
-			}
-			
-			if (cell.is_mine()) {
-				draw_sprite(spr_mine, 0, xx, yy)
-				continue
-			}
-			
-			var color = c_white;
-			var mines_count = cell.get_mines_around()
-			
-			if (mines_count <= 0) continue
-			switch(mines_count){
-				case 1:
-	                color = c_blue
-	                break;
-	            case 2:
-	                color = c_lime;
-	                break;
-	            case 3:
-	                color = c_red;
-	                break;
-	            case 4:
-	                color = c_purple;
-	                break;
-	            case 5:
-	                color = c_maroon;
-	                break;
-	            case 6:
-	                color = c_teal;
-	                break;
-	            case 7:
-	                color = c_black;
-	                break;
-	            case 8:
-	                color = c_gray;
-	                break;
-			}
-		
-			draw_set_color(color)
-			draw_text(xx + 3 + CELL_SIZE/2, yy + CELL_SIZE/2, mines_count)
+			game_grid[# r, c].draw()
 		}
 	}
 }
+
+function lose_game(){
+	game_in_progress = false
+	obj_smile.image_index = 1
+	WriteStat(undefined, STAT_GAMES, ReadStat(undefined, STAT_GAMES) + 1)
+    // Display Bombs
+    for (var xx = 0; xx < grid_width; xx++){
+		for (var yy = 0; yy < grid_height; yy++){
+            if (game_grid[# xx,yy].is_mine()){
+                game_grid[# xx,yy].open()
+            }
+        }
+    }
+}
+
+function win_game(){
+	if (cells_remaining == total_mines){
+		obj_smile.image_index = 2
+		game_in_progress = false
+										
+		WriteStat(undefined, STAT_GAMES, ReadStat(undefined, STAT_GAMES) + 1)
+		WriteStat(undefined, STAT_WINS, ReadStat(undefined, STAT_WINS) + 1)
+					
+		var init_time = ReadStat(undefined, STAT_BEST_TIME)
+
+		if (init_time == 0) { 
+			WriteStat(undefined, STAT_BEST_TIME, obj_smile.seconds)
+		} else if (init_time > obj_smile.seconds){
+			WriteStat(undefined, STAT_BEST_TIME, obj_smile.seconds)
+		}
+	}
+}
+
+function open_cells_around_digit(_r, _c){
+	var cell = game_grid[# _r, _c]
+	if cell.is_closed() exit
+
+	function open_single_cell(_r, _c){
+		if (_r < 0 or _r > grid_width - 1){
+			exit
+		}
+	
+		if (_c < 0 or _c > grid_height - 1){
+			exit
+		}
+	
+		if (game_grid[# _r, _c].is_flag()) exit
+	
+		game_grid[# _r, _c].open()
+	
+		if (game_grid[# _r, _c].is_mine()){
+			lose_game()
+		}
+	}
+
+	var num_of_flags = 0
+	// Check Top_Left
+	if (check_cell_is_flag(_r-1, _c-1)) num_of_flags++;
+	// Check Top
+	if (check_cell_is_flag(_r, _c-1)) num_of_flags++;
+	// Check Top_Right
+	if (check_cell_is_flag(_r+1, _c-1)) num_of_flags++;
+	// Check Left
+	if (check_cell_is_flag(_r-1, _c)) num_of_flags++;
+	// Check Right
+	if (check_cell_is_flag(_r+1, _c)) num_of_flags++;
+	// Check Bot_Left
+	if (check_cell_is_flag(_r-1, _c+1)) num_of_flags++;
+	// Check Bot
+	if (check_cell_is_flag(_r, _c+1)) num_of_flags++;
+	// Check Bot_Right
+	if (check_cell_is_flag(_r+1, _c+1)) num_of_flags++;
+	
+	if cell.get_mines_around() <= num_flags{
+		open_single_cell(_r-1, _c-1)
+		open_single_cell(_r, _c-1)
+		open_single_cell(_r + 1, _c-1)
+		open_single_cell(_r - 1, _c)
+		open_single_cell(_r + 1, _c)
+		open_single_cell(_r -1, _c + 1)
+		open_single_cell(_r, _c+1)
+		open_single_cell(_r+1, _c+1)
+	}
+}
+

@@ -26,4 +26,7 @@ fill_grid_with_cells()
 fill_grid_with_mines()
 update_cell_values()
 
+win_message = choose("ПОБЕДА! ВЫ АХУИТЕЛЬНЫ", "НАСЛАЖДАЙСЯ ПОБЕДОЙ", "МОЛОДЕЦ, ТЫ СУПЕР САПЁР", "УЛЬТРА МЕГА ХОРОШ")
+lose_message = choose("НЕ ПОВЕЗЛО, НЕ ФАРТАНУЛО", "НЕ РАССТРАИВАЙСЯ", "ЛОШАРА, ТЫ УМЕР", "ВАМ ВЗОРВАЛИ НОГИ")
 
+previous_hover_cell = undefined

@@ -46,7 +46,7 @@ function StatisticsShow(){
 		
 		var time = string(ReadStat(global.difficulties[i], STAT_BEST_TIME))
 		if (time == "0") {time = "Ты не побеждал(-а)"}
-		stat_string += "\nСамое маленькое время разминирования: " + time
+		stat_string += "\nСамое быстрое время разминирования: " + time
 		
 		stat_string += "\n"
 	}
